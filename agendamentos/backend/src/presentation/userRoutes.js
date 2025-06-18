@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const CreateUser = require('../application/CreateUser');
 const LoginUser = require('../application/LoginUser');
 const UserRepositorySQLite = require('../infrastructure/UserRepositorySQLite');
+const authenticateToken = require('../infrastructure/authMiddleware');
+const checkRole = require('../infrastructure/checkRole');
 
 const router = express.Router();
 const userRepo = new UserRepositorySQLite();
@@ -31,6 +33,19 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     res.status(401).json({ error: err.message });
   }
+});
+
+router.get('/protected', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Acesso liberado! Você está autenticado.',
+    user: req.user
+  });
+});
+
+
+// Exemplo de rota só para admin
+router.get('/admin-only', authenticateToken, checkRole('admin'), (req, res) => {
+  res.json({ message: 'Bem-vindo, admin!', user: req.user });
 });
 
 module.exports = router;
